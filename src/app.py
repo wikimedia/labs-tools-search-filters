@@ -109,7 +109,10 @@ def cli_collect_filters():
         del wikis['count']
     
     for key in wikis:
-        sites = wikis.get(key, {}).get('site', [])
+        try:
+            sites = wikis.get(key, {}).get('site', [])
+        except:
+            sites = wikis.get(key, [])
         for site in sites:
             api_url = site['url'] + '/w/api.php'
             data = mw_request({
