@@ -78,6 +78,13 @@ def mw_request(data, url=None, service=False):
     data['format'] = 'json'
     return requests.post(api_url, data=data, auth=auth, headers={'User-Agent': useragent})
 
+@app.context_processor
+def inject_base_variables():
+    return {
+        "logged": logged(),
+        "username": mwoauth.get_current_user()
+    }
+
 @app.before_request
 def check_permissions():
     if '/login' in request.path or '/oauth-callback' in request.path:
