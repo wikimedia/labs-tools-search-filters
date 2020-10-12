@@ -80,6 +80,9 @@ def mw_request(data, url=None, service=False):
 
 @app.before_request
 def check_permissions():
+    if '/login' in request.path or '/oauth-callback' in request.path:
+        return
+
     if not logged():
         return render_template('login.html')
     
