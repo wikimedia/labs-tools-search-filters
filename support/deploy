@@ -2,9 +2,8 @@
 
 set -e
 
-cd ~/search-filters
-source venv-bastion/bin/activate
+cd ~/search-filters/src
+source ../venv-bastion/bin/activate
 git pull
-cd src
 flask db upgrade
 webservice --backend=kubernetes python restart
