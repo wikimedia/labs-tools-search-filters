@@ -1,0 +1,12 @@
+flask
+pyyaml
+requests
+simplejson
+mwparserfromhell
+toolforge
+Flask-JSONLocale==1.11
+Flask-SQLAlchemy
+SQLAlchemy-Utils
+Flask-Migrate
+mysqlclient
+mwoauth==0.3.2

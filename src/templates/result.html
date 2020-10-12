@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2>Your data</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>dbname</th>
+                <th>filter ID</th>
+                <th>filter description</th>
+                <th>Is enabled?</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for wiki in data %}
+                {% for filter in data[wiki] %}
+                <tr>
+                    <td>{{wiki}}</td>
+                    <td>{{filter.id}}</td>
+                    <td>{{filter.description}}</td>
+                    <td>{{filter.enabled}}</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
