@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+cd ~/search-filters
+source venv-bastion/bin/activate
+git pull
+flask db upgrade
+webservice --backend=kubernetes python restart
