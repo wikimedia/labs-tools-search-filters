@@ -22,6 +22,8 @@ import requests
 from flask_jsonlocale import Locales
 from flask_mwoauth import MWOAuth
 from requests_oauthlib import OAuth1
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 app = Flask(__name__, static_folder='../static')
 
@@ -35,6 +37,17 @@ app.config.update(
 locales = Locales(app)
 _ = locales.get_message
 
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+class Abusefilter(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    wiki = db.Column(db.String(255))
+    filter_id = db.Column(db.Integer)
+    description = db.Column(db.String(255))
+    enabled = db.Column(db.Boolean)
+    pattern = db.Column(db.Text)
+
 mwoauth = MWOAuth(
     consumer_key=app.config.get('CONSUMER_KEY'),
     consumer_secret=app.config.get('CONSUMER_SECRET'),
@@ -45,15 +58,23 @@ app.register_blueprint(mwoauth.bp)
 def logged():
     return mwoauth.get_current_user() is not None
 
-def mw_request(data, url=None):
+def mw_request(data, url=None, service=False):
     if url is None:
         api_url = mwoauth.api_url
     else:
         api_url = url
-    access_token = session.get('mwoauth_access_token', {})
-    request_token_secret = access_token.get('secret').decode('utf-8')
-    request_token_key = access_token.get('key').decode('utf-8')
-    auth = OAuth1(app.config.get('CONSUMER_KEY'), app.config.get('CONSUMER_SECRET'), request_token_key, request_token_secret)
+    if service:
+        auth = OAuth1(
+            app.config.get('SERVICE_ACCOUNT_CONSUMER_TOKEN'),
+            app.config.get('SERVICE_ACCOUNT_CONSUMER_SECRET'),
+            app.config.get('SERVICE_ACCOUNT_ACCESS_TOKEN'),
+            app.config.get('SERVICE_ACCOUNT_ACCESS_SECRET')
+        )
+    else:
+        access_token = session.get('mwoauth_access_token', {})
+        request_token_secret = access_token.get('secret').decode('utf-8')
+        request_token_key = access_token.get('key').decode('utf-8')
+        auth = OAuth1(app.config.get('CONSUMER_KEY'), app.config.get('CONSUMER_SECRET'), request_token_key, request_token_secret)
     data['format'] = 'json'
     return requests.post(api_url, data=data, auth=auth, headers={'User-Agent': useragent})
 
@@ -73,51 +94,60 @@ def check_permissions():
     if 'abusefilter-view' not in rights or 'abusefilter-view-private' not in rights:
         return render_template('permission_denied.html')
 
-def query_wiki(bare_url, pattern, type='normal'):
-    api_url = bare_url + '/w/api.php'
-    res = []
-    data = mw_request({
-        "action": "query",
-        "format": "json",
-        "list": "abusefilters",
-        "abflimit": "max",
-        "abfprop": "id|status|pattern|description"
-    }, api_url).json()
-    filters = data.get('query', {}).get('abusefilters', [])
-    for filter in filters:
-        if type == 'normal':
-            found = pattern in filter['pattern']
-        elif type == 'regex':
-            found = pattern in filter['pattern'] # FIXME
+@app.cli.command('collect-filters')
+def cli_collect_filters():
+    # Truncate table
+    db.session.query(Abusefilter).delete()
+    db.session.commit()
 
-        if found:    
-            res.append({
-                'id': filter['id'],
-                'description': filter['description'],
-                'enabled': 'enabled' in filter
-            })
-    return res
+    data = mw_request({
+        "action": "sitematrix",
+        "format": "json"
+    }, None, True).json()
+    wikis = data.get('sitematrix', {})
+    if 'count' in wikis:
+        del wikis['count']
+    
+    for key in wikis:
+        sites = wikis[key]['site']
+        for site in sites:
+            api_url = site['url'] + '/w/api.php'
+            data = mw_request({
+                "action": "query",
+                "format": "json",
+                "list": "abusefilters",
+                "abflimit": "max",
+                "abfprop": "id|status|pattern|description"
+            }, api_url, True).json()
+            filters = data.get('query', {}).get('abusefilters', [])
+
+            for filter in filters:
+                af = Abusefilter(
+                    wiki=site["dbname"],
+                    filter_id=int(filter["id"]),
+                    description=filter['description'],
+                    enabled="enabled" in filter,
+                    pattern=filter["pattern"]
+                )
+                db.session.add(af)
+                db.session.commit()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
         return render_template('index.html')
-    
-    print(request.form)
 
-    data = mw_request({
-        "action": "sitematrix",
-        "format": "json"
-    }).json()
-    wikis = data.get('sitematrix', {})
-    if 'count' in wikis:
-        del wikis['count']
-    
     result = {}
-    for key in wikis:
-        sites = wikis[key]['site']
-        for site in sites:
-            result[site["dbname"]] = query_wiki(site['url'], request.form.get('query'), request.form.get('type'))
+    filters = Abusefilter.query.filter(Abusefilter.pattern.like("%%%s%%" % request.form.get('query'))).all()
+    for f in filters:
+        if f.wiki not in result:
+            result[f.wiki] = []
+        
+        result[f.wiki].append({
+            'id': f.filter_id,
+            'description': f.description,
+            'enabled': f.enabled,
+        })
     
     return render_template('result.html', data=result)
 
