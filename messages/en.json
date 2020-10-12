@@ -1,1 +1,10 @@
-{}
+{
+    "introduction-please-login": "Please, <a href=\"login\">log in</a>",
+    "introduction": "This tool allows you to search through all Wikimedia abusefilters.",
+    "permission-denied-headline": "Permission denied",
+    "permission-denied-info": "Perhaps you do not have <tt>abusefilter-view</tt> and <tt>abusefilter-view-private</tt> across all wikis?",
+    "report-bug": "Report a bug",
+    "source-code": "source code",
+    "login": "Login",
+    "logout": "Logout"
+}
