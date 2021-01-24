@@ -153,6 +153,10 @@ def cli_collect_filters():
         except:
             sites = wikis.get(key, [])
         for site in sites:
+            if 'private' in site:
+                continue
+            if 'closed' in site:
+                continue
             api_url = site['url'] + '/w/api.php'
             data = fetch_filters_raw(api_url)
             if data.get('error', {}).get('code') == 'mwoauth-invalid-authorization-invalid-user':
