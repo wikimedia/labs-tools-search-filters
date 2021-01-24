@@ -104,6 +104,35 @@ def check_permissions():
     if 'abusefilter-view' not in rights or 'abusefilter-view-private' not in rights:
         return render_template('permission_denied.html')
 
+def service_account_autocreate(api_url):
+    s = requests.Session()
+    r = s.post(api_url, {
+        'action': 'query',
+        'format': 'json',
+        'meta': 'tokens',
+        'type': 'login'
+    })
+    data = r.json()
+    token = data.get('query').get('tokens').get('logintoken')
+    # TODO: Make this not abuse action=login - for some reason, using botpasswords can't be used to autocreate the account,
+    # while login w/o passed 2FA can.
+    r = s.post(api_url, {
+        'action': 'login',
+        'format': 'json',
+        'lgname': app.config.get('SERVICE_ACCOUNT_NAME'),
+        'lgpassword': app.config.get('SERVICE_ACCOUNT_PASS'),
+        'lgtoken': token
+    })
+
+def fetch_filters_raw(api_url):
+    return mw_request({
+        "action": "query",
+        "format": "json",
+        "list": "abusefilters",
+        "abflimit": "max",
+        "abfprop": "id|status|pattern|description"
+    }, api_url, True).json()
+
 @app.cli.command('collect-filters')
 def cli_collect_filters():
     # Truncate table
@@ -125,13 +154,13 @@ def cli_collect_filters():
             sites = wikis.get(key, [])
         for site in sites:
             api_url = site['url'] + '/w/api.php'
-            data = mw_request({
-                "action": "query",
-                "format": "json",
-                "list": "abusefilters",
-                "abflimit": "max",
-                "abfprop": "id|status|pattern|description"
-            }, api_url, True).json()
+            if api_url != 'https://en.wikinews.org/w/api.php':
+                continue
+            data = fetch_filters_raw(api_url)
+            if data.get('error', {}).get('code') == 'mwoauth-invalid-authorization-invalid-user':
+                print('Autocreating %s account' % site['url'])
+                service_account_autocreate(api_url)
+                data = fetch_filters_raw(api_url)
             filters = data.get('query', {}).get('abusefilters', [])
 
             for filter in filters:
