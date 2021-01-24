@@ -154,8 +154,6 @@ def cli_collect_filters():
             sites = wikis.get(key, [])
         for site in sites:
             api_url = site['url'] + '/w/api.php'
-            if api_url != 'https://en.wikinews.org/w/api.php':
-                continue
             data = fetch_filters_raw(api_url)
             if data.get('error', {}).get('code') == 'mwoauth-invalid-authorization-invalid-user':
                 print('Autocreating %s account' % site['url'])
