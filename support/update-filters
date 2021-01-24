@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+cd ~/search-filters/src
+source ../venv-bastion/bin/activate
+flask collect-filters
