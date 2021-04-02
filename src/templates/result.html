@@ -33,7 +33,11 @@
                     <td>{{filter.description}}</td>
                     {% endif %}
                     <td>{{filter.enabled}}</td>
-                    <td>{{filter.private}}</td>
+                    <td>
+                        {% if filter.private %}
+                        {{filter.private}}
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             {% endfor %}
