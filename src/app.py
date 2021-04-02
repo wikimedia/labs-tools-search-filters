@@ -43,6 +43,7 @@ migrate = Migrate(app, db)
 class Abusefilter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     wiki = db.Column(db.String(255))
+    wiki_url = db.Column(db.String(255))
     filter_id = db.Column(db.Integer)
     description = db.Column(db.String(255))
     enabled = db.Column(db.Boolean)
@@ -189,6 +190,7 @@ def cli_collect_filters():
             for filter in filters:
                 af = Abusefilter(
                     wiki=site["dbname"],
+                    wiki_url=site["url"],
                     filter_id=int(filter["id"]),
                     description=filter['description'],
                     enabled="enabled" in filter,
@@ -210,6 +212,7 @@ def index():
         
         result[f.wiki].append({
             'id': f.filter_id,
+            'wiki_url': f.wiki_url,
             'description': f.description,
             'enabled': f.enabled,
         })
