@@ -27,7 +27,7 @@ from flask_migrate import Migrate
 
 app = Flask(__name__, static_folder='../static')
 
-useragent = 'SearchFilters (urbanecm@tools.wmflabs.org)'
+useragent = 'SearchFilters (tools.search-filters@tools.wmflabs.org)'
 
 # Load configuration from YAML file
 __dir__ = os.path.dirname(__file__)
