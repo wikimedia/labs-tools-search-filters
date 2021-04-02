@@ -17,7 +17,11 @@
             {% for wiki in data %}
                 {% for filter in data[wiki] %}
                 <tr>
+                    {% if filter.wiki_url %}
+                    <td><a href="{{filter.wiki_url}}">{{wiki}}</a></td>
+                    {% else %}
                     <td>{{wiki}}</td>
+                    {% endif %}
                     {% if filter.wiki_url %}
                     <td><a href="{{filter.wiki_url}}/wiki/Special:Abusefilter/{{filter.id}}">{{filter.id}}</a></td>
                     {% else %}
