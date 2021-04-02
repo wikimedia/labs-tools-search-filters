@@ -48,6 +48,13 @@ class Abusefilter(db.Model):
     enabled = db.Column(db.Boolean)
     pattern = db.Column(db.Text)
 
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255), nullable=False)
+    # if this is set to true by a tool maintainer, it lets the person in,
+    # even if they don't have the rights
+    is_manually_authorized = db.Column(db.Boolean, default=False, nullable=False)
+
 mwoauth = MWOAuth(
     consumer_key=app.config.get('CONSUMER_KEY'),
     consumer_secret=app.config.get('CONSUMER_SECRET'),
@@ -85,6 +92,17 @@ def inject_base_variables():
         "username": mwoauth.get_current_user()
     }
 
+def get_user():
+    if not logged():
+        return None
+
+    user = User.query.filter_by(username=mwoauth.get_current_user()).first()
+    if user is None:
+        user = User(username=mwoauth.get_current_user())
+        db.session.add(user)
+        db.session.commit()
+    return user
+
 @app.before_request
 def check_permissions():
     if '/login' in request.path or '/oauth-callback' in request.path:
@@ -92,7 +110,10 @@ def check_permissions():
 
     if not logged():
         return render_template('login.html')
-    
+
+    if get_user().is_manually_authorized:
+        return # Do not check permissions if user is manually authorized
+
     data = mw_request({
         "action": "query",
         "format": "json",
