@@ -24,7 +24,11 @@
                     {% else %}
                     <td>{{filter.id}}</td>
                     {% endif %}
+                    {% if filter.wiki_url %}
+                    <td><a href="{{filter.wiki_url}}/wiki/Special:Abusefilter/{{filter.id}}">{{filter.description}}</a></td>
+                    {% else %}
                     <td>{{filter.description}}</td>
+                    {% endif %}
                     <td>{{filter.enabled}}</td>
                     <td>{{filter.private}}</td>
                 </tr>
