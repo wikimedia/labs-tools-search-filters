@@ -10,6 +10,7 @@
                 <th>filter ID</th>
                 <th>filter description</th>
                 <th>Is enabled?</th>
+                <th>Is private?</th>
             </tr>
         </thead>
         <tbody>
@@ -25,6 +26,7 @@
                     {% endif %}
                     <td>{{filter.description}}</td>
                     <td>{{filter.enabled}}</td>
+                    <td>{{filter.private}}</td>
                 </tr>
                 {% endfor %}
             {% endfor %}

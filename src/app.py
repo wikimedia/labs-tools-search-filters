@@ -47,6 +47,7 @@ class Abusefilter(db.Model):
     filter_id = db.Column(db.Integer)
     description = db.Column(db.String(255))
     enabled = db.Column(db.Boolean)
+    private = db.Column(db.Boolean)
     pattern = db.Column(db.Text)
 
 class User(db.Model):
@@ -152,7 +153,7 @@ def fetch_filters_raw(api_url):
         "format": "json",
         "list": "abusefilters",
         "abflimit": "max",
-        "abfprop": "id|status|pattern|description"
+        "abfprop": "id|status|private|pattern|description"
     }, api_url, True).json()
 
 @app.cli.command('collect-filters')
@@ -179,6 +180,8 @@ def cli_collect_filters():
                 continue
             if 'closed' in site:
                 continue
+            if site['dbname'] != 'cswiki':
+                continue
             api_url = site['url'] + '/w/api.php'
             data = fetch_filters_raw(api_url)
             if data.get('error', {}).get('code') == 'mwoauth-invalid-authorization-invalid-user':
@@ -194,6 +197,7 @@ def cli_collect_filters():
                     filter_id=int(filter["id"]),
                     description=filter['description'],
                     enabled="enabled" in filter,
+                    private="private" in filter,
                     pattern=filter["pattern"]
                 )
                 db.session.add(af)
@@ -215,6 +219,7 @@ def index():
             'wiki_url': f.wiki_url,
             'description': f.description,
             'enabled': f.enabled,
+            'private': f.private,
         })
     
     return render_template('result.html', data=result)
