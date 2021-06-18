@@ -206,8 +206,14 @@ def index():
     if request.method == 'GET':
         return render_template('index.html')
 
+    type = request.form.get('type')
+    case = request.form.get('case')
     result = {}
-    filters = Abusefilter.query.filter(Abusefilter.pattern.like("%%%s%%" % request.form.get('query'))).all()
+    filters = []
+    if type == 'normal' and case == 'sensitive':
+        filters = Abusefilter.query.filter(Abusefilter.pattern.like("%%%s%%" % request.form.get('query'))).all()
+    elif type == 'normal' and case == 'insensitive':
+        filters = Abusefilter.query.filter(Abusefilter.pattern.ilike("%{query}%".format(query=request.form.get('query')))).all()
     for f in filters:
         if f.wiki not in result:
             result[f.wiki] = []
