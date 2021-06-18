@@ -47,6 +47,7 @@ class Abusefilter(db.Model):
     filter_id = db.Column(db.Integer)
     description = db.Column(db.String(255))
     enabled = db.Column(db.Boolean)
+    deleted = db.Column(db.Boolean, default=False, nullable=False)
     private = db.Column(db.Boolean)
     pattern = db.Column(db.Text)
 
@@ -195,6 +196,7 @@ def cli_collect_filters():
                     filter_id=int(filter["id"]),
                     description=filter['description'],
                     enabled="enabled" in filter,
+                    deleted="deleted" in filter,
                     private="private" in filter,
                     pattern=filter["pattern"]
                 )
