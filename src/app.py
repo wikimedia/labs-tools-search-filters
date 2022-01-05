@@ -108,7 +108,7 @@ def get_user():
 
 @app.before_request
 def check_permissions():
-    if '/login' in request.path or '/oauth-callback' in request.path:
+    if request.path.startswith('/login') or request.path.startswith('/oauth-callback'):
         return
 
     if not logged():
@@ -124,7 +124,7 @@ def check_permissions():
         "guiprop": "rights"
     }).json()
     rights = data.get('query', {}).get('globaluserinfo', {}).get('rights', [])
-    
+
     if 'abusefilter-view' not in rights or 'abusefilter-view-private' not in rights:
         return render_template('permission_denied.html')
 
@@ -170,7 +170,7 @@ def cli_collect_filters():
     wikis = data.get('sitematrix', {})
     if 'count' in wikis:
         del wikis['count']
-    
+
     for key in wikis:
         try:
             sites = wikis.get(key, {}).get('site', [])
@@ -219,7 +219,7 @@ def index():
     for f in filters:
         if f.wiki not in result:
             result[f.wiki] = []
-        
+
         result[f.wiki].append({
             'id': f.filter_id,
             'wiki_url': f.wiki_url,
@@ -227,7 +227,7 @@ def index():
             'enabled': f.enabled,
             'private': f.private,
         })
-    
+
     return render_template('result.html', data=result)
 
 if __name__ == "__main__":
