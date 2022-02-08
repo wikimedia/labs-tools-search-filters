@@ -27,7 +27,7 @@ from flask_migrate import Migrate
 
 app = Flask(__name__, static_folder='../static')
 
-useragent = 'SearchFilters (tools.search-filters@tools.wmflabs.org)'
+useragent = 'SearchFilters (tools.search-filters@tools.wmflabs.org; https://meta.wikimedia.org/wiki/User:Abusefilter_global_search_service_account)'
 
 # Load configuration from YAML file
 __dir__ = os.path.dirname(__file__)
