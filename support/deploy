@@ -5,6 +5,7 @@ set -e
 cd ~/search-filters/src
 source ../venv-bastion/bin/activate
 git pull
+toolforge-jobs load ~/search-filters/support/jobs.yaml
 flask db upgrade
 webservice --backend=kubernetes stop
-webservice --backend=kubernetes python3.7 start
+webservice --backend=kubernetes python3.9 start
