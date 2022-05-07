@@ -1,0 +1,6 @@
+---
+- name: update-filters
+  command: ~/search-filters/support/update-filters-k8s
+  image: tf-python39
+  schedule: "27 19 * * *"
+  emails: onfailure
